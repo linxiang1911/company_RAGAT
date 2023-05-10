@@ -37,6 +37,10 @@ class Runner(object):
         ent_set, rel_set = OrderedSet(), OrderedSet()
         for split in ['train', 'test', 'valid']:
             for line in open('./data/{}/{}.txt'.format(self.p.dataset, split)):
+                # list =  line.strip().split('\t')
+                # if len(list)!=3:
+                #     print(line)
+                #     print(list)
                 sub, rel, obj = map(str.lower, line.strip().split('\t'))
                 ent_set.add(sub)
                 rel_set.add(rel)
@@ -164,6 +168,9 @@ class Runner(object):
 
         """
         self.p = params
+        print("------")
+        print(type(self.p))
+        print("------")
         self.logger = get_logger(self.p.name, self.p.log_dir, self.p.config_dir)
 
         self.logger.info(vars(self.p))
@@ -263,7 +270,7 @@ class Runner(object):
         Parameters
         ----------
         save_path: path where the model is saved
-
+        self.edge_index, self.edge_type
         Returns
         -------
         """
@@ -272,7 +279,9 @@ class Runner(object):
             'best_val': self.best_val,
             'best_epoch': self.best_epoch,
             'optimizer': self.optimizer.state_dict(),
-            'args': vars(self.p)
+            'args': vars(self.p),
+            'edge_index':self.edge_index,
+            'edge_type':self.edge_type
         }
         torch.save(state, save_path)
 
@@ -291,7 +300,7 @@ class Runner(object):
         state_dict = state['state_dict']
         self.best_val = state['best_val']
         self.best_val_mrr = self.best_val['mrr']
-
+        self.best_hit10=self.best_val['hits@10']
         self.model.load_state_dict(state_dict)
         self.optimizer.load_state_dict(state['optimizer'])
 
@@ -434,7 +443,7 @@ class Runner(object):
         -------
         """
         try:
-            self.best_val_mrr, self.best_val, self.best_epoch, val_mrr = 0., {}, 0, 0.
+            self.best_hit10,self.best_val_mrr, self.best_val, self.best_epoch, val_mrr = 0,0., {}, 0, 0.
             save_path = os.path.join('./checkpoints', self.p.name)
 
             if self.p.restore:
@@ -442,17 +451,28 @@ class Runner(object):
                 self.logger.info('Successfully Loaded previous model')
             val_results = {}
             val_results['mrr'] = 0
+            val_results['right_hit@10'] = 0
+            val_results['hits@10']=0
             for epoch in range(self.p.max_epochs):
                 train_loss = self.run_epoch(epoch, val_mrr)
                 # if ((epoch + 1) % 10 == 0):
                 val_results = self.evaluate('valid', epoch)
-
-                if val_results['mrr'] > self.best_val_mrr:
+                #'right_hits@10'
+                # if val_results['mrr'] > self.best_val_mrr:
+                #     self.best_val = val_results
+                #     self.best_val_mrr = val_results['mrr']
+                #     self.best_epoch = epoch
+                #     self.save_model(save_path)
+                # if val_results['right_hits@10'] > self.best_hit10:
+                #     self.best_val = val_results
+                #     self.best_hit10= val_results['right_hits@10']
+                #     self.best_epoch = epoch
+                #     self.save_model(save_path)
+                if val_results['hits@10'] > self.best_hit10:
                     self.best_val = val_results
-                    self.best_val_mrr = val_results['mrr']
+                    self.best_hit10= val_results['hits@10']
                     self.best_epoch = epoch
                     self.save_model(save_path)
-
                 self.logger.info(
                     '[Epoch {}]: Training Loss: {:.5}, Best valid MRR: {:.5}\n\n'.format(epoch, train_loss,
                                                                                          self.best_val_mrr))
