@@ -19,7 +19,7 @@ rel2id = {rel: idx for idx, rel in enumerate(rel_set)}
 
 id2ent = {idx: ent for ent, idx in ent2id.items()}
 id2rel = {idx: rel for rel, idx in rel2id.items()}
-load_path='./checkpoints/test_medical_2_09_05_2023_12:52:39'
+load_path='./checkpoints/test_medical_2_10_05_2023_03:10:03'
 state = torch.load(load_path)
 p= argparse.Namespace(**state['args'])
 print("---------")

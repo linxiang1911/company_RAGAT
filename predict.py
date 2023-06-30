@@ -56,7 +56,7 @@ def predict(self, head, rel,  topk=10):
         results = [(ind.item(), score.item()) for ind, score in zip(sorted_indices[0], sorted_scores[0])]
             
     return results
-load_path='./checkpoints/test_medical_2_08_05_2023_16:54:39'
+load_path='./checkpoints/test_medical_2_10_05_2023_03:10:03'
 state = torch.load(load_path)
 state_dict = state['state_dict']
 best_val = state['best_val']
